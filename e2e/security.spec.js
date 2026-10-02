@@ -2,7 +2,7 @@ import { test, expect } from '@playwright/test'
 const id='aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa'
 const origin='https://sajbwbtqlassnipnbdkk.supabase.co'
 const hostile='<img src=x onerror=alert(1)>'
-async function signedIn(page, {provider, intentUser, age=0}={}) {
+async function signedIn(page, {provider, intentUser, age=0, folders=[]}={}) {
   const user={id,email:'test@example.com',aud:'authenticated',role:'authenticated',created_at:new Date().toISOString(),identities:provider?[{provider}]:[]}
   await page.addInitScript(({user,origin,provider,intentUser,age})=>{
     const now=Math.floor(Date.now()/1000)
@@ -16,6 +16,7 @@ async function signedIn(page, {provider, intentUser, age=0}={}) {
     const path=new URL(route.request().url()).pathname
     let data=[]
     if(path.includes('/auth/')) data=user
+    if(path.endsWith('/folders')) data=folders
     if(path.endsWith('/profiles')) data={id,display_name:hostile,avatar_url:'/avatars/avatar-01.jpeg',theme:'pixel-night',notifications:true}
     await route.fulfill({status:200,contentType:'application/json',body:JSON.stringify(data)})
   })
@@ -27,6 +28,26 @@ test('anonymous visitors cannot see the dashboard; security headers are sent',as
   expect(response.headers()['x-frame-options']).toBe('DENY')
   expect(response.headers()['content-security-policy']).toContain("script-src 'self'")
   expect(response.headers()['referrer-policy']).toBe('no-referrer')
+})
+test('search with no matches can be cleared back to existing items',async({page})=>{
+  await signedIn(page,{folders:[{
+    id:'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb',
+    user_id:id,
+    parent_id:null,
+    name:'Project Nebula',
+    updated_at:new Date().toISOString(),
+    is_starred:false,
+    trashed_at:null,
+  }]})
+  await page.goto('/')
+  await expect(page.getByText('Project Nebula',{exact:true})).toBeVisible()
+  const search=page.getByPlaceholder('Search your cloud')
+  await search.fill('nothing-here')
+  await expect(page.getByRole('heading',{name:'No items match your search'})).toBeVisible()
+  await expect(page.getByText('Create your first folder',{exact:true})).toHaveCount(0)
+  await page.getByRole('button',{name:'Clear search'}).click()
+  await expect(search).toHaveValue('')
+  await expect(page.getByText('Project Nebula',{exact:true})).toBeVisible()
 })
 
 for (const provider of ['google','github']) {
