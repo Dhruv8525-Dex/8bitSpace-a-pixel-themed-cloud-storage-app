@@ -161,7 +161,7 @@ function IntroSequence({ onFinish }) {
   </div>;
 }
 
-function FileBrowser({ query, selected, setSelected, sourceFiles, active, folderStack, onOpenFolder, onNavigate, onBack: _onBack, onUpload, onRequestUpload }) {
+function FileBrowser({ query, selected, setSelected, sourceFiles, active, folderStack, onOpenFolder, onNavigate, onBack: _onBack, onUpload, onRequestUpload, onClearSearch }) {
   const [view, setView] = useState('list');
   const currentFolder = folderStack.at(-1) || null;
   const files = useMemo(() => sourceFiles.filter(f => {
@@ -174,6 +174,7 @@ function FileBrowser({ query, selected, setSelected, sourceFiles, active, folder
     return f.name.toLowerCase().includes(query.toLowerCase());
   }), [query, sourceFiles, active, currentFolder]);
   const isRoot = active === 'My Cloud' && !currentFolder;
+  const hasSearch = query.length > 0;
   const title = isRoot ? 'All folders' : currentFolder ? 'Folders & files' : active;
   const openItem = file => file.type === 'folder' && active === 'My Cloud' ? onOpenFolder(file) : setSelected(file);
   return <section className="section-block file-section" aria-labelledby="files-title">
@@ -187,7 +188,7 @@ function FileBrowser({ query, selected, setSelected, sourceFiles, active, folder
         {currentFolder ? <label className="upload-button"><Upload size={17} /> Upload<input type="file" multiple onChange={e=>onUpload(e,currentFolder.id)}/></label> : <button className="upload-button root-upload" onClick={onRequestUpload}><Upload size={17}/>Upload</button>}
       </div>
     </div>
-    {files.length === 0 ? <div className="empty-state"><CloudSun /><h3>{isRoot?'Create your first folder':'This folder is empty'}</h3><p>{isRoot?'Files in 8bitSpace must always live inside a folder.':'Create a subfolder or upload files here.'}</p><button className="empty-create" onClick={onRequestUpload}><Folder/>{isRoot?'Create a folder':'Add something'}</button></div> : view === 'list' ?
+    {files.length === 0 ? <div className="empty-state"><CloudSun /><h3>{hasSearch?'No items match your search':isRoot?'Create your first folder':'This folder is empty'}</h3><p>{hasSearch?'Try another search or clear it to see everything again.':isRoot?'Files in 8bitSpace must always live inside a folder.':'Create a subfolder or upload files here.'}</p><button className="empty-create" onClick={hasSearch?onClearSearch:onRequestUpload}>{hasSearch?<X/>:<Folder/>}{hasSearch?'Clear search':isRoot?'Create a folder':'Add something'}</button></div> : view === 'list' ?
       <div className="table-wrap"><table>
         <thead><tr><th>Name</th><th>Status</th><th>Owner</th><th>Last modified</th><th>Size</th></tr></thead>
         <tbody>{files.map(file => <tr key={file.id} className={`${selected?.id === file.id ? 'selected' : ''}`} onClick={() => openItem(file)}>
@@ -398,7 +399,7 @@ function App() {
     <main className={`workspace ${selected ? 'with-details' : ''}`}>
       <Header query={query} setQuery={setQuery} onMenu={() => setNavOpen(true)} avatar={avatar} name={profile.name} onProfile={() => setProfileOpen(true)} />
       <div className="content-scroll">
-        {special ? <SpecialView active={active} activity={activity} storage={storage}/> : <FileBrowser query={query} selected={selected} setSelected={setSelected} sourceFiles={files} active={active} folderStack={folderStack} onOpenFolder={folder=>{setFolderStack(stack=>[...stack,folder]);setSelected(null)}} onNavigate={index=>{setFolderStack(stack=>index<0?[]:stack.slice(0,index+1));setSelected(null)}} onBack={()=>{setFolderStack(stack=>stack.slice(0,-1));setSelected(null)}} onUpload={uploadFiles} onRequestUpload={()=>setCreateOpen(true)}/>}
+        {special ? <SpecialView active={active} activity={activity} storage={storage}/> : <FileBrowser query={query} selected={selected} setSelected={setSelected} sourceFiles={files} active={active} folderStack={folderStack} onOpenFolder={folder=>{setFolderStack(stack=>[...stack,folder]);setSelected(null)}} onNavigate={index=>{setFolderStack(stack=>index<0?[]:stack.slice(0,index+1));setSelected(null)}} onBack={()=>{setFolderStack(stack=>stack.slice(0,-1));setSelected(null)}} onUpload={uploadFiles} onRequestUpload={()=>setCreateOpen(true)} onClearSearch={()=>setQuery('')}/>}
         <footer><span><ShieldCheck size={14}/> Private to your signed-in account</span><span>8bitSpace · folder-first cloud storage</span></footer>
       </div>
     </main>
