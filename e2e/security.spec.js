@@ -50,6 +50,58 @@ test('search with no matches can be cleared back to existing items',async({page}
   await expect(page.getByText('Project Nebula',{exact:true})).toBeVisible()
 })
 
+test('folder menu requires confirmation before moving a folder and its contents to Trash',async({page})=>{
+  const folder={id:'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb',user_id:id,parent_id:null,name:'Project Nebula',updated_at:new Date().toISOString(),is_starred:false,trashed_at:null}
+  const folderUpdates=[]
+  const fileUpdates=[]
+  await signedIn(page,{folders:[folder]})
+  await page.route(`${origin}/rest/v1/folders**`,async route=>{
+    if(route.request().method()==='PATCH'){
+      const update=route.request().postDataJSON()
+      folderUpdates.push(update)
+      folder.trashed_at=update.trashed_at
+      await route.fulfill({status:200,json:[]})
+    }else await route.fulfill({status:200,json:[folder]})
+  })
+  page.on('request',request=>{if(request.method()==='PATCH'&&new URL(request.url()).pathname.endsWith('/files'))fileUpdates.push(request.postDataJSON())})
+  await page.goto('/')
+  await page.getByRole('button',{name:'SKIP ↗'}).click()
+  await expect(page.getByText('Project Nebula',{exact:true})).toBeVisible()
+  await page.getByRole('button',{name:'Actions for Project Nebula'}).click()
+  await expect(page.getByRole('menuitem',{name:'Move to Trash'})).toBeVisible()
+  await page.getByRole('menuitem',{name:'Move to Trash'}).click()
+  const dialog=page.getByRole('alertdialog',{name:'Move Project Nebula to Trash?'})
+  await expect(dialog).toContainText('subfolders, and all files inside')
+  expect(folderUpdates).toHaveLength(0)
+  expect(fileUpdates).toHaveLength(0)
+  await dialog.getByRole('button',{name:'Cancel'}).click()
+  expect(folderUpdates).toHaveLength(0)
+  await page.getByRole('button',{name:'Actions for Project Nebula'}).click()
+  await page.getByRole('menuitem',{name:'Move to Trash'}).click()
+  await page.getByRole('alertdialog').locator('input').fill('MOVE')
+  await page.getByRole('button',{name:'Move to Trash',exact:true}).click()
+  await expect(page.getByRole('heading',{name:'All folders 0'})).toBeVisible()
+  expect(folderUpdates).toHaveLength(1)
+  expect(fileUpdates).toHaveLength(1)
+  expect(folderUpdates[0].trashed_at).toBeTruthy()
+  await page.getByRole('button',{name:'Trash',exact:true}).click()
+  await expect(page.getByText('Project Nebula',{exact:true})).toBeVisible()
+  await page.getByRole('button',{name:'Actions for Project Nebula'}).click()
+  await expect(page.getByRole('menuitem',{name:'Restore'})).toBeVisible()
+})
+
+test('folder actions are available in mobile grid view without opening the folder',async({page})=>{
+  await page.setViewportSize({width:390,height:844})
+  await signedIn(page,{folders:[{id:'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb',user_id:id,parent_id:null,name:'Project Nebula',updated_at:new Date().toISOString(),is_starred:false,trashed_at:null}]})
+  await page.goto('/')
+  await page.getByRole('button',{name:'SKIP ↗'}).click()
+  await page.getByRole('button',{name:'Grid view'}).click()
+  await page.getByRole('button',{name:'Actions for Project Nebula'}).click()
+  await expect(page.getByRole('menuitem',{name:'Move to Trash'})).toBeVisible()
+  await expect(page.getByRole('heading',{name:'All folders 1'})).toBeVisible()
+  expect(await page.evaluate(()=>document.documentElement.scrollWidth<=window.innerWidth)).toBe(true)
+})
+
 for (const provider of ['google','github']) {
   test(`${provider} deletion offers provider verification without a password`,async({page})=>{
     await signedIn(page,{provider})

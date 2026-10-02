@@ -325,3 +325,17 @@ html{overflow-x:hidden}
 .password-help button{background:transparent;border:0;padding:4px 0;color:#9bddff;text-decoration:underline;cursor:pointer;text-align:left}
 .confirm-dialog{max-height:calc(100dvh - 40px);overflow:auto}
 @media(max-width:520px){.social-sign-in{grid-template-columns:1fr}.auth-card{margin-block:20px}.auth-shell{overflow:auto}.social-sign-in button{min-height:48px}}
+
+/* Folder actions stay separate from the click target that opens a folder. */
+.file-name{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.folder-menu-trigger{display:grid;place-items:center;flex:0 0 auto;width:34px;height:34px;margin-left:auto;border:1px solid rgba(189,211,225,.8);border-radius:8px;color:#173143;background:rgba(255,255,255,.9);cursor:pointer}
+.folder-menu-trigger:hover,.folder-menu-trigger[aria-expanded=true]{background:#dff4ff;border-color:#73c8ef}
+.folder-menu-trigger:focus-visible,.folder-action-menu button:focus-visible{outline:3px solid #7dd8ff;outline-offset:2px}
+.grid-file-wrap{position:relative;min-width:0}
+.grid-file-wrap>.grid-file{display:block;width:100%;height:100%}
+.grid-folder-menu-trigger{position:absolute;top:18px;right:18px;margin:0}
+.folder-action-menu{position:fixed;z-index:1000;width:190px;padding:5px;border:1px solid #8db3c8;border-radius:10px;background:#102737;box-shadow:4px 4px 0 rgba(0,0,0,.24)}
+.folder-action-menu button{display:flex;align-items:center;gap:9px;width:100%;min-height:39px;padding:8px 10px;border:0;border-radius:6px;color:#f4fbff;background:transparent;text-align:left;font-size:12px;cursor:pointer}
+.folder-action-menu button:hover{background:rgba(111,199,255,.18)}
+.folder-action-menu .folder-menu-danger{color:#ffccd1}
+@media(max-width:620px){.folder-menu-trigger{width:38px;height:38px}.table-wrap td:first-child .file-name{flex:1}.grid-folder-menu-trigger{top:16px;right:16px}}
