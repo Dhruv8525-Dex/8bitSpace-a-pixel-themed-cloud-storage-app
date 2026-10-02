@@ -11,4 +11,4 @@ The script creates private, user-owned profiles, folders, files and activity rec
 
 ## Security hardening
 
-After the initial setup, apply `migrations/20260911094338_security_hardening.sql` once. Follow [the security deployment guide](../SECURITY.md). Do not rerun the original setup after this migration because it restores the older Storage policies.
+After the initial setup, apply `migrations/20260911094338_security_hardening.sql` once. See [SECURITY.md](../SECURITY.md) for the full order and local checks. Do not rerun the original setup after this migration because it restores the older Storage policies.

@@ -24,4 +24,4 @@ The database and Storage setup is documented in `supabase/8bitspace-setup.sql`.
 
 ## Security and automated checks
 
-See [SECURITY.md](SECURITY.md) for the implemented safeguards, tests, deployment order, and hosted settings still requiring activation. Run `npm test` and `npm run test:browser` for automated verification.
+See [SECURITY.md](SECURITY.md) for the safeguards in this repo, the SQL setup → hardening migration order (**do not rerun** `supabase/8bitspace-setup.sql` after the migration), local check commands, and hosted settings that still need operator activation. Run `npm test` and `npm run test:browser` for automated verification.
