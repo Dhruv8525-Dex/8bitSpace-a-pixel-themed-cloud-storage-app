@@ -339,3 +339,115 @@ html{overflow-x:hidden}
 .folder-action-menu button:hover{background:rgba(111,199,255,.18)}
 .folder-action-menu .folder-menu-danger{color:#ffccd1}
 @media(max-width:620px){.folder-menu-trigger{width:38px;height:38px}.table-wrap td:first-child .file-name{flex:1}.grid-folder-menu-trigger{top:16px;right:16px}}
+
+/* File-type filter (dropdown) */
+.type-filter {
+  display: inline-flex;
+  min-width: 0;
+}
+
+.type-filter select {
+  height: 44px;
+  min-width: 120px;
+  padding: 0 38px 0 15px;
+  color: #fff;
+  font: 600 13px var(--pixel);
+  cursor: pointer;
+  color-scheme: dark;
+  appearance: none;
+  background-color: transparent;
+  border: 1px solid rgba(255, 255, 255, .58);
+  border-radius: 11px;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' fill='none' stroke='white' stroke-width='2'%3E%3Cpath d='M1 1l5 5 5-5'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 14px center;
+}
+
+.type-filter select:hover {
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .3);
+}
+
+.type-filter select:focus-visible {
+  outline: 3px solid #fff;
+  /* your global focus rule only covers button/input */
+  outline-offset: 2px;
+}
+
+/* Fallback list for browsers without customizable selects */
+.type-filter option {
+  background: #102737;
+  color: #fff;
+  font: inherit;
+}
+
+/* Rounded, translucent list where supported (Chromium) */
+@supports (appearance: base-select) {
+
+  .type-filter select,
+  .type-filter select::picker(select) {
+    appearance: base-select;
+  }
+
+  .type-filter select {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 0 12px 0 15px;
+    background-image: none;
+  }
+
+  .type-filter select::picker-icon {
+    color: #fff;
+    transition: rotate .15s ease;
+  }
+
+  .type-filter select:open::picker-icon {
+    rotate: 180deg;
+  }
+
+  .type-filter select::picker(select) {
+    margin-top: 6px;
+    padding: 5px;
+    border: 1px solid rgba(255, 255, 255, .58);
+    border-radius: 14px;
+    background: transparent;
+    backdrop-filter: blur(14px);
+    box-shadow: 4px 4px 0 rgba(255, 255, 255, .16), 0 14px 30px rgba(0, 8, 15, .4);
+  }
+
+  .type-filter option {
+    display: flex;
+    align-items: center;
+    min-height: 40px;
+    padding: 8px 12px;
+    border-radius: 9px;
+    background: transparent;
+    cursor: pointer;
+  }
+
+  .type-filter option:hover,
+  .type-filter option:focus-visible {
+    background: rgba(111, 199, 255, .18);
+    /* same hover as .folder-action-menu */
+  }
+
+  .type-filter option:checked {
+    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .4);
+  }
+
+  .type-filter option::checkmark {
+    display: none;
+  }
+}
+
+@media (max-width: 620px) {
+  .file-heading {
+    flex-wrap: wrap;
+    row-gap: 10px;
+  }
+
+  .type-filter select {
+    min-width: 104px;
+  }
+}

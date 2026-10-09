@@ -10,6 +10,7 @@ import {
 import { supabase } from './lib/supabase';
 import { startSocialSignIn, authCallbackState, clearAuthCallback } from './lib/auth';
 import { DELETE_INTENT_KEY, deletionProviders, readDeletionIntent } from './lib/account-deletion';
+import { filterCloudFiles, TYPE_FILTERS } from './lib/filter';
 import {
   createCloudFolder, deleteCloudAccount, loadCloud, permanentlyDeleteCloudItem, saveCloudProfile, setCloudStar,
   setCloudTrash, signedFileUrl, uploadCloudFiles,
@@ -165,6 +166,11 @@ function FileBrowser({ query, selected, setSelected, sourceFiles, active, folder
   const [view, setView] = useState('list');
   const [folderMenu, setFolderMenu] = useState(null);
   const menuRef = useRef(null);
+  const [typeFilter, setTypeFilter] = useState("all");
+
+  useEffect(() => {
+    setTypeFilter("all");
+  }, [active, folderStack]);
   useEffect(() => {
     if (!folderMenu) return;
     const closeOnOutsideClick = event => {
@@ -175,17 +181,14 @@ function FileBrowser({ query, selected, setSelected, sourceFiles, active, folder
     document.addEventListener('keydown', closeOnEscape);
     return () => { document.removeEventListener('pointerdown', closeOnOutsideClick); document.removeEventListener('keydown', closeOnEscape); };
   }, [folderMenu]);
-  useEffect(() => { setFolderMenu(null); }, [active, folderStack, query, view]);
+  useEffect(() => { setFolderMenu(null); }, [active, folderStack, query, view, typeFilter]);
   const currentFolder = folderStack.at(-1) || null;
-  const files = useMemo(() => sourceFiles.filter(f => {
-    if (active === 'Trash' && !f.trashed) return false;
-    if (active !== 'Trash' && f.trashed) return false;
-    if (active === 'Starred' && !f.starred) return false;
-    if (active === 'Photos' && !['image','video'].includes(f.type)) return false;
-    if (active === 'My Cloud' && currentFolder && (f.type === 'folder' ? f.parentId !== currentFolder.id : f.folderId !== currentFolder.id)) return false;
-    if (active === 'My Cloud' && !currentFolder && (f.type !== 'folder' || f.parentId)) return false;
-    return f.name.toLowerCase().includes(query.toLowerCase());
-  }), [query, sourceFiles, active, currentFolder]);
+  const files = useMemo(() => filterCloudFiles(sourceFiles, {
+    active,
+    currentFolder,
+    query,
+    typeFilter,
+  }), [query, sourceFiles, active, currentFolder, typeFilter]);
   const isRoot = active === 'My Cloud' && !currentFolder;
   const hasSearch = query.length > 0;
   const title = isRoot ? 'All folders' : currentFolder ? 'Folders & files' : active;
@@ -206,6 +209,23 @@ function FileBrowser({ query, selected, setSelected, sourceFiles, active, folder
     <div className="section-heading file-heading">
       <div>{currentFolder ? <div className="breadcrumbs"><button onClick={()=>onNavigate(-1)}>MY CLOUD</button>{folderStack.map((folder,index)=><React.Fragment key={folder.id}><span>/</span><button aria-current={index===folderStack.length-1?'page':undefined} onClick={()=>onNavigate(index)}>{folder.name}</button></React.Fragment>)}</div> : <span className="eyebrow">MY CLOUD / HOME</span>}<h2 id="files-title">{title} <em>{files.length}</em></h2></div>
       <div className="file-tools">
+        {!isRoot && (
+          <label className="type-filter" htmlFor="type-filter-select">
+            <span className="sr-only">Filter by file type</span>
+            <select
+              id="type-filter-select"
+              aria-label="Filter by file type"
+              value={typeFilter}
+              onChange={(e) => setTypeFilter(e.target.value)}
+            >
+              {TYPE_FILTERS.map(({ id, label }) => (
+                <option key={id} value={id}>
+                  {label}
+                </option>
+              ))}
+            </select>
+          </label>
+        )}
         <div className="view-toggle" aria-label="View style">
           <button className={view === 'list' ? 'active' : ''} onClick={() => setView('list')} aria-label="List view"><LayoutList /></button>
           <button className={view === 'grid' ? 'active' : ''} onClick={() => setView('grid')} aria-label="Grid view"><Grid2X2 /></button>
