@@ -29,7 +29,7 @@ const modifiedLabel = value => {
 
 const mapFolder = row => ({
   id: row.id, name: row.name, type: 'folder', parentId: row.parent_id,
-  modified: modifiedLabel(row.updated_at), size: '—', bytes: 0, owner: 'You',
+  modified: modifiedLabel(row.updated_at), updatedAt: row.updated_at, size: '—', bytes: 0, owner: 'You',
   tag: 'Folder', color: 'blue', status: 'Stored', members: 1,
   starred: row.is_starred, trashed: Boolean(row.trashed_at),
 })
@@ -37,7 +37,7 @@ const mapFolder = row => ({
 const mapFile = row => ({
   id: row.id, name: row.name, type: typeFromMime(row.mime_type, row.name),
   folderId: row.folder_id, storagePath: row.storage_path,
-  modified: modifiedLabel(row.updated_at), size: sizeLabel(row.size_bytes),
+  modified: modifiedLabel(row.updated_at), updatedAt: row.updated_at, size: sizeLabel(row.size_bytes),
   bytes: row.size_bytes, owner: 'You', tag: row.tag || 'Uploaded', color: 'blue',
   status: 'Stored', members: 1, starred: row.is_starred,
   trashed: Boolean(row.trashed_at),
