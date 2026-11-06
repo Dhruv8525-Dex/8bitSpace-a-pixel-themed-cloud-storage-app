@@ -161,8 +161,24 @@ function IntroSequence({ onFinish }) {
   </div>;
 }
 
+const sortFiles = (items, sort) => {
+  const sorted = [...items];
+  if (sort === 'name') {
+    sorted.sort((a, b) => a.name.localeCompare(b.name, undefined, { sensitivity: 'base' }));
+  } else {
+    // Most recently modified: newest first. Items without a date go last.
+    sorted.sort((a, b) => {
+      const aTime = a.updatedAt ? new Date(a.updatedAt).getTime() : 0;
+      const bTime = b.updatedAt ? new Date(b.updatedAt).getTime() : 0;
+      return bTime - aTime;
+    });
+  }
+  return sorted;
+};
+
 function FileBrowser({ query, selected, setSelected, sourceFiles, active, folderStack, onOpenFolder, onNavigate, onBack: _onBack, onUpload, onRequestUpload, onClearSearch, onFolderAction }) {
   const [view, setView] = useState('list');
+  const [sort, setSort] = useState('modified');
   const [folderMenu, setFolderMenu] = useState(null);
   const menuRef = useRef(null);
   useEffect(() => {
@@ -177,15 +193,18 @@ function FileBrowser({ query, selected, setSelected, sourceFiles, active, folder
   }, [folderMenu]);
   useEffect(() => { setFolderMenu(null); }, [active, folderStack, query, view]);
   const currentFolder = folderStack.at(-1) || null;
-  const files = useMemo(() => sourceFiles.filter(f => {
-    if (active === 'Trash' && !f.trashed) return false;
-    if (active !== 'Trash' && f.trashed) return false;
-    if (active === 'Starred' && !f.starred) return false;
-    if (active === 'Photos' && !['image','video'].includes(f.type)) return false;
-    if (active === 'My Cloud' && currentFolder && (f.type === 'folder' ? f.parentId !== currentFolder.id : f.folderId !== currentFolder.id)) return false;
-    if (active === 'My Cloud' && !currentFolder && (f.type !== 'folder' || f.parentId)) return false;
-    return f.name.toLowerCase().includes(query.toLowerCase());
-  }), [query, sourceFiles, active, currentFolder]);
+  const files = useMemo(() => {
+    const filtered = sourceFiles.filter(f => {
+      if (active === 'Trash' && !f.trashed) return false;
+      if (active !== 'Trash' && f.trashed) return false;
+      if (active === 'Starred' && !f.starred) return false;
+      if (active === 'Photos' && !['image','video'].includes(f.type)) return false;
+      if (active === 'My Cloud' && currentFolder && (f.type === 'folder' ? f.parentId !== currentFolder.id : f.folderId !== currentFolder.id)) return false;
+      if (active === 'My Cloud' && !currentFolder && (f.type !== 'folder' || f.parentId)) return false;
+      return f.name.toLowerCase().includes(query.toLowerCase());
+    });
+    return sortFiles(filtered, sort);
+  }, [query, sourceFiles, active, currentFolder, sort]);
   const isRoot = active === 'My Cloud' && !currentFolder;
   const hasSearch = query.length > 0;
   const title = isRoot ? 'All folders' : currentFolder ? 'Folders & files' : active;
@@ -206,6 +225,13 @@ function FileBrowser({ query, selected, setSelected, sourceFiles, active, folder
     <div className="section-heading file-heading">
       <div>{currentFolder ? <div className="breadcrumbs"><button onClick={()=>onNavigate(-1)}>MY CLOUD</button>{folderStack.map((folder,index)=><React.Fragment key={folder.id}><span>/</span><button aria-current={index===folderStack.length-1?'page':undefined} onClick={()=>onNavigate(index)}>{folder.name}</button></React.Fragment>)}</div> : <span className="eyebrow">MY CLOUD / HOME</span>}<h2 id="files-title">{title} <em>{files.length}</em></h2></div>
       <div className="file-tools">
+        <label className="sort-control">
+          <span>Sort by</span>
+          <select value={sort} onChange={e => setSort(e.target.value)}>
+            <option value="modified">Most recently modified</option>
+            <option value="name">Name A-Z</option>
+          </select>
+        </label>
         <div className="view-toggle" aria-label="View style">
           <button className={view === 'list' ? 'active' : ''} onClick={() => setView('list')} aria-label="List view"><LayoutList /></button>
           <button className={view === 'grid' ? 'active' : ''} onClick={() => setView('grid')} aria-label="Grid view"><Grid2X2 /></button>
