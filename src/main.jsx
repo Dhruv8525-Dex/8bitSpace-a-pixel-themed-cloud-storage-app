@@ -190,6 +190,13 @@ function FileBrowser({ query, selected, setSelected, sourceFiles, active, folder
   const hasSearch = query.length > 0;
   const title = isRoot ? 'All folders' : currentFolder ? 'Folders & files' : active;
   const openItem = file => file.type === 'folder' && active === 'My Cloud' ? onOpenFolder(file) : setSelected(file);
+  const rowLabel = file => file.type === 'folder' && active === 'My Cloud' ? `Open folder ${file.name}` : `Show details for ${file.name}`;
+  const onRowKeyDown = (event, file) => {
+    if (event.key !== 'Enter' && event.key !== ' ') return;
+    if (event.target !== event.currentTarget) return;
+    event.preventDefault();
+    openItem(file);
+  };
   const toggleFolderMenu = (event, file) => {
     event.stopPropagation();
     if (folderMenu?.file.id === file.id) { setFolderMenu(null); return; }
@@ -216,7 +223,7 @@ function FileBrowser({ query, selected, setSelected, sourceFiles, active, folder
     {files.length === 0 ? <div className="empty-state"><CloudSun /><h3>{hasSearch?'No items match your search':isRoot?'Create your first folder':'This folder is empty'}</h3><p>{hasSearch?'Try another search or clear it to see everything again.':isRoot?'Files in 8bitSpace must always live inside a folder.':'Create a subfolder or upload files here.'}</p><button className="empty-create" onClick={hasSearch?onClearSearch:onRequestUpload}>{hasSearch?<X/>:<Folder/>}{hasSearch?'Clear search':isRoot?'Create a folder':'Add something'}</button></div> : view === 'list' ?
       <div className="table-wrap"><table>
         <thead><tr><th>Name</th><th>Status</th><th>Owner</th><th>Last modified</th><th>Size</th></tr></thead>
-        <tbody>{files.map(file => <tr key={file.id} className={`${selected?.id === file.id ? 'selected' : ''}`} onClick={() => openItem(file)}>
+        <tbody>{files.map(file => <tr key={file.id} role="button" tabIndex={0} aria-label={rowLabel(file)} className={`${selected?.id === file.id ? 'selected' : ''}`} onClick={() => openItem(file)} onKeyDown={event => onRowKeyDown(event, file)}>
           <td><span className={`row-icon ${file.color}`}><IconFor type={file.type} /></span><span className="file-name"><strong>{file.name}</strong><small><i className={`tag-dot ${file.color}`} />{file.tag}</small></span>{folderMenuButton(file)}</td>
           <td><span className={`status ${file.status.toLowerCase().replace(' ', '-')}`}>{file.status === 'Syncing' && <i />}{file.status}</span></td>
           <td><span className="owner"><i>{file.owner === 'You' ? 'DT' : file.owner.split(' ').map(x => x[0]).join('')}</i>{file.owner}</span></td>
