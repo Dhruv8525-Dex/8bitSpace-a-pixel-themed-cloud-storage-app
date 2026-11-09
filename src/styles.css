@@ -339,3 +339,10 @@ html{overflow-x:hidden}
 .folder-action-menu button:hover{background:rgba(111,199,255,.18)}
 .folder-action-menu .folder-menu-danger{color:#ffccd1}
 @media(max-width:620px){.folder-menu-trigger{width:38px;height:38px}.table-wrap td:first-child .file-name{flex:1}.grid-folder-menu-trigger{top:16px;right:16px}}
+
+/* Keyboard-accessible file list rows: a visible focus ring around the whole row.
+   Outlines do not paint on table rows in browsers, so the ring is drawn with
+   inset shadows on the row cells instead. */
+.table-wrap tbody tr:focus-visible td { background:rgba(255,255,255,.14); box-shadow:inset 0 2px 0 #fff, inset 0 -2px 0 #fff; }
+.table-wrap tbody tr:focus-visible td:first-child { box-shadow:inset 2px 0 0 #fff, inset 0 2px 0 #fff, inset 0 -2px 0 #fff; }
+.table-wrap tbody tr:focus-visible td:last-child { box-shadow:inset -2px 0 0 #fff, inset 0 2px 0 #fff, inset 0 -2px 0 #fff; }
